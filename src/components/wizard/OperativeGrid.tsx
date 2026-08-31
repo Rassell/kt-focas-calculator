@@ -1,7 +1,7 @@
-import type { Mode, OperativePreset } from '../../types/operative'
+import type { Mode, Operative } from '../../types/operative'
 import { OperativeCard } from './OperativeCard'
 
-export function OperativeGrid({ operatives: ops, mode, selectedId, onSelect, variant, query }: { operatives: OperativePreset[]; mode: Mode; selectedId: string | null; onSelect: (id: string) => void; variant: 'attacker' | 'defender'; query: string }) {
+export function OperativeGrid({ operatives: ops, mode, selectedId, onSelect, variant, query }: { operatives: Operative[]; mode: Mode; selectedId: string | null; onSelect: (id: string) => void; variant: 'attacker' | 'defender'; query: string }) {
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2.5 max-h-[420px] overflow-y-auto p-0.5">
       {ops.map(op => (

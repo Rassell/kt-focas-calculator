@@ -1,10 +1,13 @@
-import { toAttacker, toDefender } from '../../data/operatives'
-import type { Mode, OperativePreset } from '../../types/operative'
+import { getOperativeFaction, getWeapons, toAttacker, toDefender } from '../../data/operatives'
+import type { Mode, Operative } from '../../types/operative'
 import { Pill } from '../ui/Pill'
 
-export function OperativeCard({ op, mode, selected, onSelect, variant }: { op: OperativePreset; mode: Mode; selected: boolean; onSelect: () => void; variant: 'attacker' | 'defender' }) {
-  const att = toAttacker(op, mode)
+export function OperativeCard({ op, mode, selected, onSelect, variant }: { op: Operative; mode: Mode; selected: boolean; onSelect: () => void; variant: 'attacker' | 'defender' }) {
   const def = toDefender(op)
+  const faction = getOperativeFaction(op.id)
+  const weapons = getWeapons(op, mode)
+  const previewProfile = weapons[0]?.profiles[0] ?? null
+  const previewAtt = previewProfile ? toAttacker(previewProfile) : null
   return (
     <button
       type="button"
@@ -13,20 +16,30 @@ export function OperativeCard({ op, mode, selected, onSelect, variant }: { op: O
     >
       <div className="flex justify-between items-baseline gap-2">
         <span className="text-[13px] font-bold text-[#0f172a]">{op.name}</span>
-        <span className="text-[11px] text-[#64748b] whitespace-nowrap">{op.faction}</span>
+        <span className="text-[11px] text-[#64748b] whitespace-nowrap">{faction}</span>
       </div>
-      <span className="text-[11px] text-[#6366f1] font-semibold">{op.role}</span>
       {variant === 'attacker' ? (
-        <div className="flex flex-wrap gap-1.5">
-          <Pill>{att.attacks}A</Pill>
-          <Pill>{att.bs}+</Pill>
-          <Pill>{att.normalDmg}/{att.critDmg} dmg</Pill>
-          {att.piercing > 0 && <Pill>Piercing {att.piercing}</Pill>}
-          {att.lethal && <Pill>Lethal 5+</Pill>}
-          {att.rending && <Pill>Rending</Pill>}
-          {att.severe && <Pill>Severe</Pill>}
-          {att.reroll !== 'none' && <Pill variant="tag">{att.reroll}</Pill>}
-        </div>
+        <>
+          <span className="text-[11px] text-[#6366f1] font-semibold">
+            {weapons.length === 0 ? 'No weapons' : `${weapons.length} weapon${weapons.length > 1 ? 's' : ''} · ${weapons.map(w => w.name).join(', ')}`}
+          </span>
+          {previewAtt ? (
+            <div className="flex flex-wrap gap-1.5">
+              <Pill>{previewAtt.attacks}A</Pill>
+              <Pill>{previewAtt.bs}+</Pill>
+              <Pill>{previewAtt.normalDmg}/{previewAtt.critDmg} dmg</Pill>
+              {previewAtt.piercing > 0 && <Pill>Piercing {previewAtt.piercing}</Pill>}
+              {previewAtt.lethal && <Pill>Lethal 5+</Pill>}
+              {previewAtt.rending && <Pill>Rending</Pill>}
+              {previewAtt.severe && <Pill>Severe</Pill>}
+              {previewAtt.punishing && <Pill>Punishing</Pill>}
+              {previewAtt.brutal && <Pill>Brutal</Pill>}
+              {previewAtt.reroll !== 'none' && <Pill variant="tag">{previewAtt.reroll}</Pill>}
+            </div>
+          ) : (
+            <span className="text-[11px] text-[#94a3b8]">No {mode === 'shoot' ? 'ranged' : 'melee'} profile</span>
+          )}
+        </>
       ) : (
         <div className="flex flex-wrap gap-1.5">
           <Pill>{def.save}+ save</Pill>

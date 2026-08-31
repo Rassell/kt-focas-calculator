@@ -15,6 +15,7 @@ export interface Attacker {
   severe: boolean
   punishing: boolean
   rounds: number
+  brutal?: boolean // display-only for now; no engine effect yet
 }
 
 export interface Defender {

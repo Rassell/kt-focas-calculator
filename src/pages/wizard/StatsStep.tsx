@@ -11,27 +11,31 @@ import { calcResult, type Situation } from '../../engine/calculator'
 import { useWizardParams } from '../../hooks/useWizardParams'
 
 export default function StatsStep() {
-  const { mode, attackerOp, defenderOp, buildSearch } = useWizardParams()
+  const { mode, attackerOp, attackerWeapon, attackerProfile, defenderOp, buildSearch } = useWizardParams()
   const navigate = useNavigate()
 
   const situation: Situation | null = useMemo(() => {
-    if (!mode || !attackerOp || !defenderOp) return null
-    return { attacker: toAttacker(attackerOp, mode), defender: toDefender(defenderOp) }
-  }, [mode, attackerOp, defenderOp])
+    if (!mode || !attackerProfile || !defenderOp) return null
+    return { attacker: toAttacker(attackerProfile), defender: toDefender(defenderOp) }
+  }, [mode, attackerProfile, defenderOp])
 
   const result = useMemo(() => (situation ? calcResult(situation) : null), [situation])
 
-  if (!mode || !attackerOp || !defenderOp) {
-    return (
-      <StepGuard message="Missing selection — go back and pick a mode, attacker and defender." action={<SecondaryButton onClick={() => navigate(`/wizard/mode${buildSearch({})}`)}>← Start</SecondaryButton>} />
-    )
+  if (!mode) {
+    return <StepGuard message="Pick a mode first." action={<SecondaryButton onClick={() => navigate(`/wizard/mode${buildSearch({})}`)}>← Go to Mode</SecondaryButton>} />
+  }
+  if (!attackerOp || !attackerWeapon || !attackerProfile) {
+    return <StepGuard message="Pick an attacker weapon/profile first." action={<SecondaryButton onClick={() => navigate(`/wizard/attacker${buildSearch({})}`)}>← Go to Attacker</SecondaryButton>} />
+  }
+  if (!defenderOp) {
+    return <StepGuard message="Pick a defender first." action={<SecondaryButton onClick={() => navigate(`/wizard/defender${buildSearch({})}`)}>← Go to Defender</SecondaryButton>} />
   }
 
   return (
     <div className="p-[18px]">
       <h3 className="m-0 mb-1.5 text-base text-[#0f172a] font-semibold">Statistics</h3>
       <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center mb-4 max-[700px]:grid-cols-1">
-        <AttackerSummaryCard op={attackerOp} mode={mode} />
+        <AttackerSummaryCard operative={attackerOp} weapon={attackerWeapon} profile={attackerProfile} mode={mode} />
         <div className="text-[13px] font-bold text-[#6366f1] uppercase tracking-[0.08em] text-center max-[700px]:text-center">vs</div>
         <DefenderSummaryCard op={defenderOp} />
       </div>
