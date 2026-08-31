@@ -27,7 +27,7 @@ src/
   engine/
     calculator.ts         # Probability engine (see below)
 public/
-  favicon.svg, icons.svg
+  favicon.svg
 .github/workflows/deploy.yml  # Pages deploy (build → 404.html SPA fallback → deploy-pages)
 index.html, vite.config.ts, tsconfig.*.json
 ```

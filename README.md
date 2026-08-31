@@ -44,7 +44,7 @@ src/
   engine/
     calculator.ts      # Probability engine (multinomial + binomial enumeration)
 public/
-  favicon.svg, icons.svg
+  favicon.svg
 .github/workflows/deploy.yml  # GitHub Pages deploy
 ```
 
