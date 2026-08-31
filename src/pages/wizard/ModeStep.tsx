@@ -9,7 +9,7 @@ export default function ModeStep() {
   const navigate = useNavigate()
 
   return (
-    <StepContainer title="Choose attack type" description="Will this be a shooting or fight attack? This affects which weapon profile is used.">
+    <StepContainer title="">
       <div className="grid grid-cols-2 gap-3 max-[640px]:grid-cols-1">
         <ModeCard mode="shoot" selected={mode === 'shoot'} onSelect={() => updateParams({ mode: 'shoot' })} />
         <ModeCard mode="fight" selected={mode === 'fight'} onSelect={() => updateParams({ mode: 'fight' })} />
