@@ -22,8 +22,6 @@ export default function App() {
             <NavLink to="/fight" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Fight</NavLink>
             <NavLink to="/shooting" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Shooting</NavLink>
             <span className="nav-sep" aria-hidden>·</span>
-            <a href="https://ktcalc.com/help" target="_blank" rel="noreferrer">How it works</a>
-            <a href="https://github.com/jfreal/ktcalc" target="_blank" rel="noreferrer">GitHub</a>
             <button className="help-btn" onClick={() => setShowHelp(v => !v)}>{showHelp ? 'Hide Help' : 'Help'}</button>
           </nav>
         </div>
@@ -53,7 +51,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <span>KT FOCAS Calculator — Kill Team 2026 Edition • <a href="https://ktcalc.com" target="_blank" rel="noreferrer">Inspired by ktcalc.com</a> • <a href="https://github.com/jfreal/ktcalc" target="_blank" rel="noreferrer">Open source</a> • <a href="https://assets.warhammer-community.com/killteam_keydownloads_literules_eng-jfhe9v0j7c-n0x6ozmgo9.pdf" target="_blank" rel="noreferrer">Lite Rules PDF</a></span>
+        <span>KT FOCAS Calculator — Kill Team 2026 Edition • <a href="https://ktcalc.com" target="_blank" rel="noreferrer">Inspired by ktcalc.com</a> • <a href="https://github.com/Rassell/kt-focas-calculator" target="_blank" rel="noreferrer">Open source</a> • <a href="https://assets.warhammer-community.com/killteam_keydownloads_literules_eng-jfhe9v0j7c-n0x6ozmgo9.pdf" target="_blank" rel="noreferrer">Lite Rules PDF</a></span>
       </footer>
     </div>
   )
