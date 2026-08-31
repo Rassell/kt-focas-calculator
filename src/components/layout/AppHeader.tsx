@@ -11,8 +11,7 @@ export function AppHeader() {
               className="h-8 w-8"
             />
             <div>
-              <h1 className="m-0 text-[20px] text-red tracking-[-0.5px] font-semibold">KT FOCAS Calculator</h1>
-              <p className="mt-0.5 text-xs text-[#9aa0b5]">Kill Team 2026 Calculator — work out the odds</p>
+              <h1 className="m-0 text-[20px] text-white! tracking-[-0.5px] font-semibold">KT FOCAS Calculator</h1>
             </div>
           </div>
         </div>
