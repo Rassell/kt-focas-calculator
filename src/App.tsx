@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
-import Fight from './pages/Fight'
-import Shooting from './pages/Shooting'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import Wizard from './pages/Wizard'
 import './App.css'
 
@@ -20,10 +18,6 @@ export default function App() {
             </div>
           </div>
           <nav className="nav">
-            <NavLink to="/fight" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Fight</NavLink>
-            <NavLink to="/shooting" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Shooting</NavLink>
-            <NavLink to="/wizard" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Wizard</NavLink>
-            <span className="nav-sep" aria-hidden>·</span>
             <button className="help-btn" onClick={() => setShowHelp(v => !v)}>{showHelp ? 'Hide Help' : 'Help'}</button>
           </nav>
         </div>
@@ -45,11 +39,9 @@ export default function App() {
 
       <main className="main">
         <Routes>
-          <Route path="/" element={<Navigate to="/fight" replace />} />
-          <Route path="/fight" element={<Fight />} />
-          <Route path="/shooting" element={<Shooting />} />
+          <Route path="/" element={<Navigate to="/wizard" replace />} />
           <Route path="/wizard" element={<Wizard />} />
-          <Route path="*" element={<Navigate to="/fight" replace />} />
+          <Route path="*" element={<Navigate to="/wizard" replace />} />
         </Routes>
       </main>
 

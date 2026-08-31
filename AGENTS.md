@@ -4,11 +4,11 @@
 
 ## Overview
 
-KT FOCAS Calculator is a Kill Team 2026 odds calculator (Fight + Shooting tabs), inspired by https://ktcalc.com (open source https://github.com/jfreal/ktcalc). Two side-by-side Situations, exact-enumeration probability engine, winner banner. Live at https://Rassell.github.io/kt-focas-calculator/ via GitHub Pages.
+KT FOCAS Calculator is a Kill Team 2026 odds calculator — single guided Wizard flow, inspired by https://ktcalc.com (open source https://github.com/jfreal/ktcalc). Exact-enumeration probability engine, operative presets from JSON. Live at https://Rassell.github.io/kt-focas-calculator/ via GitHub Pages.
 
 ## Tech Stack
 
-- Vite 8 + React 19 + TypeScript 6 + React Compiler (Babel) + React Router 7 (`/fight`, `/shooting`)
+- Vite 8 + React 19 + TypeScript 6 + React Compiler (Babel) + React Router 7 (`/wizard` only)
 - No other extra runtime deps (no recharts). Pure React + CSS.
 - ESLint flat config (`eslint.config.js`), `tsc -b` for type checking.
 - GitHub Pages project site: `vite.config.ts` `base: '/kt-focas-calculator/'`, `BrowserRouter basename={import.meta.env.BASE_URL}`.
@@ -17,13 +17,14 @@ KT FOCAS Calculator is a Kill Team 2026 odds calculator (Fight + Shooting tabs),
 
 ```
 src/
-  App.tsx                 # Shell: topbar/nav, help, Routes (/fight, /shooting), footer
-  App.css                 # Layout, panels, stepper, banner, responsive grid
+  App.tsx                 # Shell: topbar, help, Routes (/wizard), footer
+  App.css                 # Layout, wizard, histogram, responsive grid
   index.css               # Design tokens (light/dark), base typography
   main.tsx                # StrictMode + createRoot + BrowserRouter basename=BASE_URL
   pages/
-    Fight.tsx             # Fight mode (WS label) — SituationPanel + calcResult
-    Shooting.tsx          # Shooting mode (BS label) — SituationPanel + calcResult
+    Wizard.tsx            # 4-step wizard: mode → attacker → defender → stats (calcResult)
+  data/
+    operatives.json       # Predefined operatives: { shoot, fight, defender } per entry
   engine/
     calculator.ts         # Probability engine (see below)
 public/
@@ -47,7 +48,7 @@ npm run preview  # vite preview (after build)
 
 - Project site at `https://Rassell.github.io/kt-focas-calculator/` (repo `Rassell/kt-focas-calculator`, branch `main`).
 - `vite.config.ts` `base: '/kt-focas-calculator/'` — required for project sites (`https://<user>.github.io/<repo>/`). For a user/org site use `'/'`.
-- `src/main.tsx` `BrowserRouter basename={import.meta.env.BASE_URL}` — routes `/fight`/`/shooting` work under subpath; dev stays at `/`.
+- `src/main.tsx` `BrowserRouter basename={import.meta.env.BASE_URL}` — route `/wizard` works under subpath; dev stays at `/`.
 - `.github/workflows/deploy.yml` — on `push` to `main` + `workflow_dispatch`: `npm ci` → `npm run build` → `cp dist/index.html dist/404.html` (SPA fallback for deep links) → `configure-pages` → `upload-pages-artifact` → `deploy-pages`. Requires Settings → Pages → Source: `GitHub Actions`.
 - When adding routes, keep SPA fallback (`404.html`) and `basename` in mind; test `npm run build && npm run preview` and check `dist/index.html` asset paths include `/kt-focas-calculator/`.
 
@@ -63,16 +64,15 @@ npm run preview  # vite preview (after build)
 
 When editing the engine: keep exact enumeration (no Monte Carlo), ensure `dmgProbs` sums to 1, run `npm run build` to catch TS errors.
 
-## UI — `src/App.tsx` + `src/pages/`
+## UI — `src/App.tsx` + `src/pages/Wizard.tsx`
 
-- `IncDec`, `SelectField`, `Toggle` — small controlled inputs. `advanced` prop hides when `showAdvanced` is false (⚙️ gear).
-- `SituationPanel` — Attacker + Defender panels + results (avg/injury/kill + histogram bars). Owns `calcResult` via `useMemo`. Lives in `pages/Fight.tsx` (WS label) and `pages/Shooting.tsx` (BS label).
-- `App` — shell: topbar/nav (`NavLink` to `/fight`/`/shooting`), help, `Routes` (`/`→`/fight`, `/fight`, `/shooting`, `*`→`/fight`), footer. Banner logic lives in pages.
+- `Wizard.tsx` — 4-step flow: mode (shoot/fight) → attacker (searchable grid from `operatives.json`, `shoot`/`fight` profile per mode) → defender (same JSON, `defender` profile) → stats (`calcResult` → avg/injury/kill + histogram + exact probs). State: `step`, `mode`, `attackerId`, `defenderId`, search queries. Mappers `toAttacker`/`toDefender`.
+- `App` — shell: topbar, help, `Routes` (`/`→`/wizard`, `/wizard`, `*`→`/wizard`), footer. No other pages.
 - Routing via `react-router-dom` `BrowserRouter` with `basename={import.meta.env.BASE_URL}` (see `main.tsx`).
 
 ## Styling — `src/App.css`
 
-- Dark topbar (`#0f1117`), card panels, 2-col grid (1-col <900px), stepper buttons, histogram bars (`#6366f1`), banner gradient (`#6366f1→#8b5cf6`).
+- Dark topbar (`#0f1117`), wizard progress dots, mode cards, operative grid, summary vs layout, histogram bars (`#6366f1`).
 - Keep `index.css` tokens for light/dark. Prefer CSS over new deps.
 
 ## Conventions
@@ -81,16 +81,16 @@ When editing the engine: keep exact enumeration (no Monte Carlo), ensure `dmgPro
 - Never print codeblocks for file changes — use edit tools. Never run terminal edits for files.
 - After edits, run `npm run build` and `npm run lint`; fix errors before finishing.
 - Keep bundle small — avoid adding deps without need.
-- Banner text is exactly `Situation 1 does more dmg, enjoy` / `Situation 2 does more dmg, enjoy` / `Both situations deal equal damage — enjoy!` + 🎲.
 
 ## Adding Features
 
-- New attacker/defender rule: extend type in `calculator.ts`, handle in `attackerDistribution` or `calcDmgProbs`, add control in `SituationPanel`.
-- New view/table: add component in `App.tsx`, style in `App.css`, memoize calculations.
+- New operative: add entry to `src/data/operatives.json` with `shoot`/`fight`/`defender` fields matching `Attacker`/`Defender` types.
+- New attacker/defender rule: extend type in `calculator.ts`, handle in `attackerDistribution` or `calcDmgProbs`, expose in wizard summary if needed.
+- New view: add component in `App.tsx` or `pages/`, style in `App.css`, memoize calculations.
 - Tests: add `vitest` if needed (not currently installed).
 
 ## Verification
 
 1. `npm run build` passes (tsc + vite)
 2. `npm run lint` passes
-3. Manual: tweak BS/Attacks, banner updates, histogram reflects probs
+3. Manual: wizard flow mode → attacker → defender → stats shows correct avg/injury/kill + histogram

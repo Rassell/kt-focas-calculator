@@ -133,11 +133,6 @@ export default function Wizard() {
 
   return (
     <div className="wizard">
-      <div className="page-intro">
-        <h2>Wizard</h2>
-        <p>Step through a guided calculation — pick shoot or fight, then choose your operative and target.</p>
-      </div>
-
       <div className="wizard-progress">
         {[1, 2, 3, 4].map(n => (
           <div key={n} className={`wizard-step-dot ${step === n ? 'active' : ''} ${step > n ? 'done' : ''}`}>
