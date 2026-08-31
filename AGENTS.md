@@ -4,39 +4,52 @@
 
 ## Overview
 
-KT FOCAS Calculator is a Kill Team 2026 shooting odds calculator, inspired by https://ktcalc.com (open source https://github.com/jfreal/ktcalc). Two side-by-side Situations, exact-enumeration probability engine, winner banner.
+KT FOCAS Calculator is a Kill Team 2026 odds calculator (Fight + Shooting tabs), inspired by https://ktcalc.com (open source https://github.com/jfreal/ktcalc). Two side-by-side Situations, exact-enumeration probability engine, winner banner. Live at https://Rassell.github.io/kt-focas-calculator/ via GitHub Pages.
 
 ## Tech Stack
 
-- Vite 8 + React 19 + TypeScript 6 + React Compiler (Babel)
-- No extra runtime deps (no recharts, no router). Pure React + CSS.
+- Vite 8 + React 19 + TypeScript 6 + React Compiler (Babel) + React Router 7 (`/fight`, `/shooting`)
+- No other extra runtime deps (no recharts). Pure React + CSS.
 - ESLint flat config (`eslint.config.js`), `tsc -b` for type checking.
+- GitHub Pages project site: `vite.config.ts` `base: '/kt-focas-calculator/'`, `BrowserRouter basename={import.meta.env.BASE_URL}`.
 
 ## Project Structure
 
 ```
 src/
-  App.tsx                 # UI: SituationPanel, IncDec/Select/Toggle, banner, header/help/footer
+  App.tsx                 # Shell: topbar/nav, help, Routes (/fight, /shooting), footer
   App.css                 # Layout, panels, stepper, banner, responsive grid
   index.css               # Design tokens (light/dark), base typography
-  main.tsx                # StrictMode + createRoot
+  main.tsx                # StrictMode + createRoot + BrowserRouter basename=BASE_URL
+  pages/
+    Fight.tsx             # Fight mode (WS label) — SituationPanel + calcResult
+    Shooting.tsx          # Shooting mode (BS label) — SituationPanel + calcResult
   engine/
     calculator.ts         # Probability engine (see below)
 public/
   favicon.svg, icons.svg
+.github/workflows/deploy.yml  # Pages deploy (build → 404.html SPA fallback → deploy-pages)
 index.html, vite.config.ts, tsconfig.*.json
 ```
 
 ## Commands
 
 ```bash
-npm run dev      # Vite dev server (HMR)
-npm run build    # tsc -b && vite build
+npm run dev      # Vite dev server (HMR) — base = /
+npm run build    # tsc -b && vite build — base = /kt-focas-calculator/ for Pages
 npm run lint     # eslint .
 npm run preview  # vite preview (after build)
 ```
 
 `npm start` is not defined — use `npm run dev`.
+
+## Deployment — GitHub Pages
+
+- Project site at `https://Rassell.github.io/kt-focas-calculator/` (repo `Rassell/kt-focas-calculator`, branch `main`).
+- `vite.config.ts` `base: '/kt-focas-calculator/'` — required for project sites (`https://<user>.github.io/<repo>/`). For a user/org site use `'/'`.
+- `src/main.tsx` `BrowserRouter basename={import.meta.env.BASE_URL}` — routes `/fight`/`/shooting` work under subpath; dev stays at `/`.
+- `.github/workflows/deploy.yml` — on `push` to `main` + `workflow_dispatch`: `npm ci` → `npm run build` → `cp dist/index.html dist/404.html` (SPA fallback for deep links) → `configure-pages` → `upload-pages-artifact` → `deploy-pages`. Requires Settings → Pages → Source: `GitHub Actions`.
+- When adding routes, keep SPA fallback (`404.html`) and `basename` in mind; test `npm run build && npm run preview` and check `dist/index.html` asset paths include `/kt-focas-calculator/`.
 
 ## Engine — `src/engine/calculator.ts`
 
@@ -50,12 +63,12 @@ npm run preview  # vite preview (after build)
 
 When editing the engine: keep exact enumeration (no Monte Carlo), ensure `dmgProbs` sums to 1, run `npm run build` to catch TS errors.
 
-## UI — `src/App.tsx`
+## UI — `src/App.tsx` + `src/pages/`
 
 - `IncDec`, `SelectField`, `Toggle` — small controlled inputs. `advanced` prop hides when `showAdvanced` is false (⚙️ gear).
-- `SituationPanel` — Attacker + Defender panels + results (avg/injury/kill + histogram bars). Owns `calcResult` via `useMemo`.
-- `App` — holds `s1`, `s2`, `advanced`, `showHelp`. Computes `r1`, `r2`, `banner` (winner by avgDamage, tie threshold 0.005). Renders two `SituationPanel`s + banner `Situation X does more dmg, enjoy` + header/help/footer.
-- No routing, no URL state, no persistence. Add those only if requested.
+- `SituationPanel` — Attacker + Defender panels + results (avg/injury/kill + histogram bars). Owns `calcResult` via `useMemo`. Lives in `pages/Fight.tsx` (WS label) and `pages/Shooting.tsx` (BS label).
+- `App` — shell: topbar/nav (`NavLink` to `/fight`/`/shooting`), help, `Routes` (`/`→`/fight`, `/fight`, `/shooting`, `*`→`/fight`), footer. Banner logic lives in pages.
+- Routing via `react-router-dom` `BrowserRouter` with `basename={import.meta.env.BASE_URL}` (see `main.tsx`).
 
 ## Styling — `src/App.css`
 
