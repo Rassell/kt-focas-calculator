@@ -1,7 +1,43 @@
 import { useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
-import Wizard from './pages/Wizard'
+import { NavLink, Navigate, Route, Routes, useSearchParams } from 'react-router-dom'
+import WizardLayout from './pages/wizard/Layout'
+import ModeStep from './pages/wizard/ModeStep'
+import AttackerStep from './pages/wizard/AttackerStep'
+import DefenderStep from './pages/wizard/DefenderStep'
+import StatsStep from './pages/wizard/StatsStep'
 import './App.css'
+
+function WizardStepsNav() {
+  const [searchParams] = useSearchParams()
+  const mode = searchParams.get('mode')
+  const attacker = searchParams.get('attacker')
+  const defender = searchParams.get('defender')
+  const qs = searchParams.toString()
+  const suffix = qs ? `?${qs}` : ''
+
+  const steps = [
+    { to: `/wizard/mode${suffix}`, label: 'Mode', enabled: true },
+    { to: `/wizard/attacker${suffix}`, label: 'Attacker', enabled: !!mode },
+    { to: `/wizard/defender${suffix}`, label: 'Defender', enabled: !!mode && !!attacker },
+    { to: `/wizard/stats${suffix}`, label: 'Stats', enabled: !!mode && !!attacker && !!defender },
+  ] as const
+
+  return (
+    <div className="wizard-nav">
+      {steps.map(s =>
+        s.enabled ? (
+          <NavLink key={s.label} to={s.to} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+            {s.label}
+          </NavLink>
+        ) : (
+          <span key={s.label} className="nav-link disabled" aria-disabled="true">
+            {s.label}
+          </span>
+        )
+      )}
+    </div>
+  )
+}
 
 export default function App() {
   const [showHelp, setShowHelp] = useState(false)
@@ -18,6 +54,8 @@ export default function App() {
             </div>
           </div>
           <nav className="nav">
+            <WizardStepsNav />
+            <span className="nav-sep" aria-hidden>·</span>
             <button className="help-btn" onClick={() => setShowHelp(v => !v)}>{showHelp ? 'Hide Help' : 'Help'}</button>
           </nav>
         </div>
@@ -39,9 +77,15 @@ export default function App() {
 
       <main className="main">
         <Routes>
-          <Route path="/" element={<Navigate to="/wizard" replace />} />
-          <Route path="/wizard" element={<Wizard />} />
-          <Route path="*" element={<Navigate to="/wizard" replace />} />
+          <Route path="/" element={<Navigate to="/wizard/mode" replace />} />
+          <Route path="/wizard" element={<WizardLayout />}>
+            <Route index element={<Navigate to="mode" replace />} />
+            <Route path="mode" element={<ModeStep />} />
+            <Route path="attacker" element={<AttackerStep />} />
+            <Route path="defender" element={<DefenderStep />} />
+            <Route path="stats" element={<StatsStep />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/wizard/mode" replace />} />
         </Routes>
       </main>
 
