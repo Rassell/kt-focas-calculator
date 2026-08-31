@@ -2,7 +2,7 @@ import { getOperativeFaction, toDefender } from '../../data/operatives'
 import type { Operative } from '../../types/operative'
 import { Pill } from '../ui/Pill'
 
-export function DefenderSummaryCard({ op }: { op: Operative }) {
+export function DefenderSummaryCard({ op, coverSaves, obscured }: { op: Operative; coverSaves: number; obscured: boolean }) {
   const d = toDefender(op)
   const faction = getOperativeFaction(op.id)
   return (
@@ -13,11 +13,11 @@ export function DefenderSummaryCard({ op }: { op: Operative }) {
       <div className="flex flex-wrap gap-1.5 text-[11px]">
         <Pill variant="white">{d.save}+ Save</Pill>
         <Pill variant="white">{d.wounds} Wounds</Pill>
-        {d.coverSaves > 0 && <Pill variant="white">Cover {d.coverSaves}</Pill>}
         {d.indomitus && <Pill variant="white">Indomitus</Pill>}
-        {d.obscured && <Pill variant="white">Obscured</Pill>}
         {d.jasCrits && <Pill variant="white">JaS Crits</Pill>}
         {d.jasNormals && <Pill variant="white">JaS Normals</Pill>}
+        {coverSaves > 0 && <Pill variant="white">Cover {coverSaves}</Pill>}
+        {obscured && <Pill variant="white">Obscured</Pill>}
       </div>
     </div>
   )

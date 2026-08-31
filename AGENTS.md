@@ -54,12 +54,12 @@ npm run preview  # vite preview (after build)
 
 ## Engine — `src/engine/calculator.ts`
 
-- **Types**: `Attacker` (attacks, bs 2-6, normalDmg, critDmg, devastating, piercing, piercingCrits, reroll, lethal, accurate, rending, severe, punishing, rounds), `Defender` (save 2-6, wounds, coverSaves, indomitus, obscured, jasCrits, jasNormals), `Situation`, `CalcResult` (avgDamage, injuryChance, killChance, dmgProbs, histogram).
+- **Types**: `Attacker` (attacks, bs 2-6, normalDmg, critDmg, devastating, piercing, piercingCrits, reroll, lethal, accurate, rending, severe, punishing, rounds), `Defender` (save 2-6, wounds, indomitus, jasCrits, jasNormals), `Situation` (`attacker`, `defender`, `coverSaves`, `obscured` situational checks), `CalcResult` (avgDamage, injuryChance, killChance, dmgProbs, histogram).
 - **Reroll**: `none | balanced | relentless | ceaseless | balanced-ceaseless`. Ceaseless handled via `effectiveDieProbs` (reroll 1s); Balanced/Relentless via enumeration in `attackerDistribution`.
-- **Attacker abilities** in `applyAbilities`: Accurate (retain fails as normals), Punishing (retain one fail), Severe (no crits → norm→crit), Rending (≥1 crit → norm→crit). Obscured applied after (crits→normals).
-- **Defender**: cover saves (prefer crits if critDmg > normalDmg), saves via `saveProb` (AP worsens save, Indomitus ignores AP), binomial enumeration for saved hits, Devastating (MW per crit before saves), JaS (ignore one crit/normal).
+- **Attacker abilities** in `applyAbilities`: Accurate (retain fails as normals), Punishing (retain one fail), Severe (no crits → norm→crit), Rending (≥1 crit → norm→crit).
+- **Situation checks**: `coverSaves` (auto-block X hits, prefer crits if critDmg > normalDmg) and `obscured` (crits→normals) applied in `calcDmgProbs` before defender saves. Defender saves via `saveProb` (AP worsens save, Indomitus ignores AP), binomial enumeration, Devastating (MW per crit before saves), JaS (ignore one crit/normal).
 - **Rounds**: convolution of `dmgMap` with itself.
-- **Exports**: `calcDmgProbs(sit)`, `calcResult(sit)`, `combinedKillChance(s1,s2,wounds)`, `defaultAttacker()`, `defaultDefender()`.
+- **Exports**: `calcDmgProbs(sit)`, `calcResult(sit)`, `combinedKillChance(s1,s2,wounds)`, `defaultAttacker()`, `defaultDefender()`, `defaultSituation()`.
 - **Math**: `multinomialProb` (N!/(c!n!f!) * p^c...), `binomialProb`, `dieProbs`/`effectiveDieProbs`.
 
 When editing the engine: keep exact enumeration (no Monte Carlo), ensure `dmgProbs` sums to 1, run `npm run build` to catch TS errors.

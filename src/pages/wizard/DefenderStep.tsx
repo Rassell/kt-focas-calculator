@@ -26,7 +26,7 @@ export default function DefenderStep() {
   }
 
   return (
-    <StepContainer title="Select defender" description="Choose the target operative. Defensive stats (save, wounds, cover) come from the same JSON.">
+    <StepContainer title="Select defender" description="Choose the target operative. Cover and obscured are situational checks set on the next step.">
       <OperativeSearchInput value={query} onChange={setQuery} />
       <OperativeGrid operatives={filtered} mode={mode} selectedId={defenderId} onSelect={id => updateParams({ defender: id })} variant="defender" query={query} />
       <WizardNavigation>

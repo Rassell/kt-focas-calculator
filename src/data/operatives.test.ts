@@ -83,9 +83,7 @@ describe('operatives.json shape', () => {
       expect(d.save).toBeGreaterThanOrEqual(2)
       expect(d.save).toBeLessThanOrEqual(6)
       expect(d.wounds).toBeGreaterThan(0)
-      expect(d.coverSaves).toBeGreaterThanOrEqual(0)
       expect(typeof d.indomitus).toBe('boolean')
-      expect(typeof d.obscured).toBe('boolean')
       expect(typeof d.jasCrits).toBe('boolean')
       expect(typeof d.jasNormals).toBe('boolean')
     }

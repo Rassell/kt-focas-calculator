@@ -21,9 +21,7 @@ export interface Attacker {
 export interface Defender {
   save: number // 2..6
   wounds: number
-  coverSaves: number
   indomitus: boolean
-  obscured: boolean
   jasCrits: boolean
   jasNormals: boolean
 }
@@ -31,6 +29,8 @@ export interface Defender {
 export interface Situation {
   attacker: Attacker
   defender: Defender
+  coverSaves: number
+  obscured: boolean
 }
 
 export interface CalcResult {
@@ -136,16 +136,8 @@ function attackerDistribution(att: Attacker): Map<string, number> {
       nn -= 1
       cc += 1
     }
-    // Obscured: crits become normals
-    if (att.defenderObscured) {
-      // handled via defender flag, but we need to know defender obscured here
-      // We'll handle obscured in attackerDistribution caller
-    }
     return { c: cc, n: nn }
   }
-
-  // We need to handle defender obscured outside, so add param
-  // Instead, we will handle obscured after abilities but before returning
 
   if (att.reroll === 'none' || att.reroll === 'ceaseless') {
     for (let c = 0; c <= N; c++) {
@@ -154,7 +146,6 @@ function attackerDistribution(att: Attacker): Map<string, number> {
         const p = multinomialProb(N, c, n, f, pCrit, pNorm, pFail)
         if (p === 0) continue
         const { c: cc, n: nn } = applyAbilities(c, n, f)
-        // obscured handled later
         const key = `${cc},${nn}`
         dist.set(key, (dist.get(key) || 0) + p)
       }
@@ -224,13 +215,6 @@ function attackerDistribution(att: Attacker): Map<string, number> {
   return dist
 }
 
-// Extend Attacker with defender obscured flag for distribution
-declare module './calculator' {
-  interface Attacker {
-    defenderObscured?: boolean
-  }
-}
-
 function saveProb(save: number, piercing: number, indomitus: boolean): number {
   let eff = save + (indomitus ? 0 : piercing)
   eff = clamp(eff, 2, 7) // 7 means impossible (needs 7+)
@@ -239,7 +223,7 @@ function saveProb(save: number, piercing: number, indomitus: boolean): number {
 }
 
 export function calcDmgProbs(sit: Situation): Map<number, number> {
-  const att = { ...sit.attacker, defenderObscured: sit.defender.obscured }
+  const att = sit.attacker
   const def = sit.defender
 
   // attacker distribution
@@ -252,22 +236,22 @@ export function calcDmgProbs(sit: Situation): Map<number, number> {
     const [cStr, nStr] = key.split(',').map(Number)
     let c = cStr, n = nStr
 
-    // Obscured: crits become normals
-    if (def.obscured && c > 0) {
+    // Obscured: crits become normals (situational check)
+    if (sit.obscured && c > 0) {
       n += c
       c = 0
     }
 
-    // Cover saves: auto retain X saves as successes, prefer to block crits if critDmg > normalDmg
+    // Cover saves: auto retain X saves as successes, prefer to block crits if critDmg > normalDmg (situational check)
     let cBlockedByCover = 0
     let nBlockedByCover = 0
-    if (def.coverSaves > 0) {
+    if (sit.coverSaves > 0) {
       if (att.critDmg > att.normalDmg) {
-        cBlockedByCover = Math.min(c, def.coverSaves)
-        nBlockedByCover = Math.min(n, def.coverSaves - cBlockedByCover)
+        cBlockedByCover = Math.min(c, sit.coverSaves)
+        nBlockedByCover = Math.min(n, sit.coverSaves - cBlockedByCover)
       } else {
-        nBlockedByCover = Math.min(n, def.coverSaves)
-        cBlockedByCover = Math.min(c, def.coverSaves - nBlockedByCover)
+        nBlockedByCover = Math.min(n, sit.coverSaves)
+        cBlockedByCover = Math.min(c, sit.coverSaves - nBlockedByCover)
       }
     }
     c -= cBlockedByCover
@@ -402,10 +386,17 @@ export function defaultDefender(): Defender {
   return {
     save: 3,
     wounds: 12,
-    coverSaves: 1,
     indomitus: false,
-    obscured: false,
     jasCrits: false,
     jasNormals: false,
+  }
+}
+
+export function defaultSituation(): Situation {
+  return {
+    attacker: defaultAttacker(),
+    defender: defaultDefender(),
+    coverSaves: 0,
+    obscured: false,
   }
 }

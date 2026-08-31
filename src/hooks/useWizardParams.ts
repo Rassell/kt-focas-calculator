@@ -8,6 +8,17 @@ export function parseMode(v: string | null): Mode | null {
   return null
 }
 
+export function parseCoverSaves(v: string | null): number {
+  if (v === null || v === '') return 0
+  const n = Number(v)
+  if (!Number.isFinite(n) || n < 0) return 0
+  return Math.floor(n)
+}
+
+export function parseObscured(v: string | null): boolean {
+  return v === '1' || v === 'true'
+}
+
 export function useWizardParams() {
   const [searchParams, setSearchParams] = useSearchParams()
   const mode = parseMode(searchParams.get('mode'))
@@ -15,6 +26,8 @@ export function useWizardParams() {
   const defenderId = searchParams.get('defender')
   const attackerWeaponId = searchParams.get('weapon')
   const attackerProfileId = searchParams.get('profile')
+  const coverSaves = parseCoverSaves(searchParams.get('cover'))
+  const obscured = parseObscured(searchParams.get('obscured'))
 
   const attackerOp = useMemo(() => (attackerId ? findOperative(attackerId) : null), [attackerId])
   const defenderOp = useMemo(() => (defenderId ? findOperative(defenderId) : null), [defenderId])
@@ -79,6 +92,8 @@ export function useWizardParams() {
     defenderId,
     attackerWeaponId,
     attackerProfileId,
+    coverSaves,
+    obscured,
     attackerOp,
     defenderOp,
     attackerWeapon,

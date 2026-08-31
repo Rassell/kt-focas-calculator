@@ -44,9 +44,9 @@ export function OperativeCard({ op, mode, selected, onSelect, variant }: { op: O
         <div className="flex flex-wrap gap-1.5">
           <Pill>{def.save}+ save</Pill>
           <Pill>{def.wounds}W</Pill>
-          {def.coverSaves > 0 && <Pill>Cover {def.coverSaves}</Pill>}
           {def.indomitus && <Pill>Indomitus</Pill>}
-          {def.obscured && <Pill>Obscured</Pill>}
+          {def.jasCrits && <Pill>JaS Crits</Pill>}
+          {def.jasNormals && <Pill>JaS Normals</Pill>}
         </div>
       )}
     </button>

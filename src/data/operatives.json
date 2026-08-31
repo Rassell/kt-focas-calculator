@@ -80,6 +80,7 @@
         "defender": {
           "save": 3,
           "wounds": 15,
+          "indomitus": false,
           "jasCrits": false,
           "jasNormals": true
         }
@@ -143,6 +144,7 @@
         "defender": {
           "save": 3,
           "wounds": 14,
+          "indomitus": false,
           "jasCrits": false,
           "jasNormals": false
         }

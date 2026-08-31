@@ -10,8 +10,8 @@ import {
   type Situation,
 } from './calculator'
 
-function sit(overA: Partial<Attacker> = {}, overD: Partial<Defender> = {}): Situation {
-  return { attacker: { ...defaultAttacker(), ...overA }, defender: { ...defaultDefender(), ...overD } }
+function sit(overA: Partial<Attacker> = {}, overD: Partial<Defender> = {}, overS: Partial<Pick<Situation, 'coverSaves' | 'obscured'>> = {}): Situation {
+  return { attacker: { ...defaultAttacker(), ...overA }, defender: { ...defaultDefender(), ...overD }, coverSaves: 0, obscured: false, ...overS }
 }
 
 function sumProbs(m: Map<number, number>) {
@@ -41,9 +41,7 @@ describe('defaultAttacker / defaultDefender', () => {
     expect(defaultDefender()).toEqual({
       save: 3,
       wounds: 12,
-      coverSaves: 1,
       indomitus: false,
-      obscured: false,
       jasCrits: false,
       jasNormals: false,
     })
@@ -74,9 +72,9 @@ describe('calcDmgProbs invariants', () => {
     sit({ reroll: 'relentless' }),
     sit({ reroll: 'balanced-ceaseless' }),
     sit({ rounds: 2 }),
-    sit({}, { obscured: true }),
+    sit({}, {}, { obscured: true }),
     sit({}, { indomitus: true }),
-    sit({}, { coverSaves: 0 }),
+    sit({}, {}, { coverSaves: 0 }),
     sit({}, { jasCrits: true }),
     sit({ bs: 2 }),
     sit({ bs: 6 }),
@@ -115,40 +113,41 @@ describe('calcDmgProbs invariants', () => {
 })
 
 describe('calcResult golden values — change detector', () => {
-  // Values computed from current engine on 2026-08-31 via npx tsx. Update only intentionally.
-  const goldens: Array<[string, Partial<Attacker>, Partial<Defender>, { avg: number; kill: number; injury: number }]> = [
-    ['default', {}, {}, { avg: 1.728652263374, kill: 0.000028577961, injury: 0.022576588935 }],
-    ['lethal', { lethal: true }, {}, { avg: 1.855967078189, kill: 0.000457247371, injury: 0.053955189758 }],
-    ['devastating1', { devastating: 1 }, {}, { avg: 2.395318930041, kill: 0.002086191129, injury: 0.068529949703 }],
-    ['piercing1', { piercing: 1 }, {}, { avg: 2.493698559671, kill: 0.000028577961, injury: 0.041877429127 }],
-    ['piercingCrits1', { piercingCrits: 1 }, {}, { avg: 1.827932098765, kill: 0.000096450617, injury: 0.032021604938 }],
-    ['accurate1', { accurate: 1 }, {}, { avg: 2.518775720165, kill: 0.000028577961, injury: 0.042009602195 }],
-    ['rending', { rending: true }, {}, { avg: 1.884516460905, kill: 0.000371513489, injury: 0.056527206219 }],
-    ['severe', { severe: true }, {}, { avg: 1.728652263374, kill: 0.000028577961, injury: 0.022576588935 }],
-    ['punishing', { punishing: true }, {}, { avg: 2.518775720165, kill: 0.000028577961, injury: 0.042009602195 }],
-    ['ceaseless', { reroll: 'ceaseless' }, {}, { avg: 2.179841304997, kill: 0.0000529442, injury: 0.036380229061 }],
-    ['balanced', { reroll: 'balanced' }, {}, { avg: 2.276663237311, kill: 0.000066681908, injury: 0.04239064167 }],
-    ['relentless', { reroll: 'relentless' }, {}, { avg: 2.640654371793, kill: 0.000090320468, injury: 0.05509548567 }],
-    ['balanced-ceaseless', { reroll: 'balanced-ceaseless' }, {}, { avg: 2.692401671528, kill: 0.000100005712, injury: 0.059036985252 }],
-    ['rounds2', { rounds: 2 }, {}, { avg: 3.457304526749, kill: 0.014469451401, injury: 0.123611231329 }],
-    ['obscured', {}, { obscured: true }, { avg: 1.679012345679, kill: 0, injury: 0.007315957933 }],
-    ['indomitus+piercing', { piercing: 1 }, { indomitus: true }, { avg: 1.728652263374, kill: 0.000028577961, injury: 0.022576588935 }],
-    ['cover0', {}, { coverSaves: 0 }, { avg: 2.888888888889, kill: 0.00297210791, injury: 0.114997713763 }],
-    ['cover2', {}, { coverSaves: 2 }, { avg: 0.795781893004, kill: 0, injury: 0.001114540466 }],
-    ['jasCrits', {}, { jasCrits: true }, { avg: 1.537865797897, kill: 0, injury: 0.005772748057 }],
-    ['jasNormals', {}, { jasNormals: true }, { avg: 0.453189300412, kill: 0.000028577961, injury: 0.003457933242 }],
-    ['wounds7', {}, { wounds: 7 }, { avg: 1.728652263374, kill: 0.022576588935, injury: 0.022576588935 }],
-    ['wounds5', {}, { wounds: 5 }, { avg: 1.728652263374, kill: 0.095107453132, injury: 0.095107453132 }],
-    ['bs2', { bs: 2 }, {}, { avg: 2.383744855967, kill: 0.000028577961, injury: 0.036208276177 }],
-    ['bs6', { bs: 6 }, {}, { avg: 0.198559670782, kill: 0.000028577961, injury: 0.001914723365 }],
-    ['save2', {}, { save: 2 }, { avg: 0.864326131687, kill: 0.000003572245, injury: 0.005254772519 }],
-    ['save6', {}, { save: 6 }, { avg: 4.321630658436, kill: 0.000446530636, injury: 0.170306784408 }],
-    ['zeroAttacks', { attacks: 0 }, {}, { avg: 0, kill: 0, injury: 0 }],
-    ['highDmg', { normalDmg: 5, critDmg: 7 }, {}, { avg: 2.897633744856, kill: 0.022576588935, injury: 0.125628715135 }],
+  // Values recomputed 2026-08-31 after moving coverSaves/obscured to Situation (default coverSaves=0, obscured=false).
+  const goldens: Array<[string, Partial<Attacker>, Partial<Defender>, Partial<Pick<Situation, 'coverSaves' | 'obscured'>>, { avg: number; kill: number; injury: number }]> = [
+    ['default', {}, {}, {}, { avg: 2.888888888889, kill: 0.00297210791, injury: 0.114997713763 }],
+    ['lethal', { lethal: true }, {}, {}, { avg: 3.111111111111, kill: 0.006706294772, injury: 0.17101051669 }],
+    ['devastating1', { devastating: 1 }, {}, {}, { avg: 3.555555555556, kill: 0.010059442158, injury: 0.147538484987 }],
+    ['piercing1', { piercing: 1 }, {}, {}, { avg: 3.888888888889, kill: 0.009193172725, injury: 0.177267303955 }],
+    ['piercingCrits1', { piercingCrits: 1 }, {}, {}, { avg: 3.333333333333, kill: 0.005642361111, injury: 0.16796875 }],
+    ['accurate1', { accurate: 1 }, {}, {}, { avg: 3.691358024691, kill: 0.007773205304, injury: 0.16598079561 }],
+    ['rending', { rending: true }, {}, {}, { avg: 3.04475308642, kill: 0.00674439872, injury: 0.137631458619 }],
+    ['severe', { severe: true }, {}, {}, { avg: 3.045524691358, kill: 0.00297210791, injury: 0.167466849566 }],
+    ['punishing', { punishing: true }, {}, {}, { avg: 3.679012345679, kill: 0.007773205304, injury: 0.16598079561 }],
+    ['ceaseless', { reroll: 'ceaseless' }, {}, {}, { avg: 3.37037037037, kill: 0.005324673858, injury: 0.152963358115 }],
+    ['balanced', { reroll: 'balanced' }, {}, {}, { avg: 3.468449931413, kill: 0.006591982929, injury: 0.16316110349 }],
+    ['relentless', { reroll: 'relentless' }, {}, {}, { avg: 3.851851851852, kill: 0.008851405895, injury: 0.195047051319 }],
+    ['balanced-ceaseless', { reroll: 'balanced-ceaseless' }, {}, {}, { avg: 3.904615940434, kill: 0.009735009782, injury: 0.200831638256 }],
+    ['rounds2', { rounds: 2 }, {}, {}, { avg: 5.777777777778, kill: 0.081693957596, injury: 0.38779597173 }],
+    ['obscured', {}, {}, { obscured: true }, { avg: 2.666666666667, kill: 0.002438652644, injury: 0.036579789666 }],
+    ['indomitus+piercing', { piercing: 1 }, { indomitus: true }, {}, { avg: 2.888888888889, kill: 0.00297210791, injury: 0.114997713763 }],
+    ['cover0', {}, {}, { coverSaves: 0 }, { avg: 2.888888888889, kill: 0.00297210791, injury: 0.114997713763 }],
+    ['cover1', {}, {}, { coverSaves: 1 }, { avg: 1.728652263374, kill: 0.000028577961, injury: 0.022576588935 }],
+    ['cover2', {}, {}, { coverSaves: 2 }, { avg: 0.795781893004, kill: 0, injury: 0.001114540466 }],
+    ['jasCrits', {}, { jasCrits: true }, {}, { avg: 2.071368693797, kill: 0.000781130925, injury: 0.022176497485 }],
+    ['jasNormals', {}, { jasNormals: true }, {}, { avg: 1.335648148148, kill: 0.000657293096, injury: 0.03337905807 }],
+    ['wounds7', {}, { wounds: 7 }, {}, { avg: 2.888888888889, kill: 0.114997713763, injury: 0.114997713763 }],
+    ['wounds5', {}, { wounds: 5 }, {}, { avg: 2.888888888889, kill: 0.215820759031, injury: 0.215820759031 }],
+    ['bs2', { bs: 2 }, {}, {}, { avg: 3.555555555556, kill: 0.006449093126, injury: 0.154806812986 }],
+    ['bs6', { bs: 6 }, {}, {}, { avg: 0.888888888889, kill: 0.000657293096, injury: 0.017175354367 }],
+    ['save2', {}, { save: 2 }, {}, { avg: 1.444444444444, kill: 0.000228623685, injury: 0.030635573845 }],
+    ['save6', {}, { save: 6 }, {}, { avg: 7.222222222222, kill: 0.100022862369, injury: 0.560128029264 }],
+    ['zeroAttacks', { attacks: 0 }, {}, {}, { avg: 0, kill: 0, injury: 0 }],
+    ['highDmg', { normalDmg: 5, critDmg: 7 }, {}, {}, { avg: 4.888888888889, kill: 0.114997713763, injury: 0.32037799116 }],
   ]
 
-  it.each(goldens)('%s matches golden avg/kill/injury', (name, overA, overD, exp) => {
-    const r = calcResult(sit(overA, overD))
+  it.each(goldens)('%s matches golden avg/kill/injury', (name, overA, overD, overS, exp) => {
+    const r = calcResult(sit(overA, overD, overS))
     expect(r.avgDamage).toBeCloseTo(exp.avg, 9)
     expect(r.killChance).toBeCloseTo(exp.kill, 9)
     expect(r.injuryChance).toBeCloseTo(exp.injury, 9)
@@ -157,17 +156,17 @@ describe('calcResult golden values — change detector', () => {
     void name
   })
 
-  it('severe has no effect when crits already present on average (locked behavior)', () => {
-    // Current engine: severe only triggers when cc===0 && nn>0, so with default BS3+ it rarely changes avg vs none
+  it('severe increases avg vs none (with coverSaves=0)', () => {
     const rNone = calcResult(sit())
     const rSevere = calcResult(sit({ severe: true }))
-    expect(rSevere.avgDamage).toBeCloseTo(rNone.avgDamage, 12)
+    expect(rSevere.avgDamage).toBeGreaterThan(rNone.avgDamage)
   })
 
-  it('accurate and punishing produce same avg for default (locked behavior)', () => {
+  it('accurate and punishing produce similar avg for default', () => {
     const rAcc = calcResult(sit({ accurate: 1 }))
     const rPun = calcResult(sit({ punishing: true }))
-    expect(rAcc.avgDamage).toBeCloseTo(rPun.avgDamage, 12)
+    // With coverSaves=0 they are close but not identical (punishing requires >=1 success)
+    expect(Math.abs(rAcc.avgDamage - rPun.avgDamage)).toBeLessThan(0.05)
   })
 })
 
@@ -228,16 +227,16 @@ describe('attacker abilities isolated', () => {
 
 describe('defender abilities', () => {
   it('coverSaves blocks damage — more cover = less avg', () => {
-    const r0 = calcResult(sit({}, { coverSaves: 0 }))
-    const r1 = calcResult(sit({}, { coverSaves: 1 }))
-    const r2 = calcResult(sit({}, { coverSaves: 2 }))
+    const r0 = calcResult(sit({}, {}, { coverSaves: 0 }))
+    const r1 = calcResult(sit({}, {}, { coverSaves: 1 }))
+    const r2 = calcResult(sit({}, {}, { coverSaves: 2 }))
     expect(r0.avgDamage).toBeGreaterThan(r1.avgDamage)
     expect(r1.avgDamage).toBeGreaterThan(r2.avgDamage)
   })
 
   it('cover prefers crits when critDmg > normalDmg', () => {
     // With critDmg > normalDmg, cover should block crits first, so avg with cover should be lower than if it blocked normals
-    const r = calcResult(sit({ critDmg: 6, normalDmg: 3 }, { coverSaves: 1 }))
+    const r = calcResult(sit({ critDmg: 6, normalDmg: 3 }, {}, { coverSaves: 1 }))
     expect(r.avgDamage).toBeGreaterThan(0)
     expect(sumProbs(r.dmgProbs)).toBeCloseTo(1, 9)
   })
@@ -254,7 +253,7 @@ describe('defender abilities', () => {
 
   it('obscured converts crits to normals and reduces avg', () => {
     const r0 = calcResult(sit())
-    const r1 = calcResult(sit({}, { obscured: true }))
+    const r1 = calcResult(sit({}, {}, { obscured: true }))
     expect(r1.avgDamage).toBeLessThan(r0.avgDamage)
     // obscured should have no crit damage — max dmg should be lower
     const maxDmg0 = Math.max(...[...r0.dmgProbs.keys()])
@@ -313,13 +312,13 @@ describe('edge cases', () => {
   })
 
   it('high wounds never killed by weak attack', () => {
-    const r = calcResult(sit({ attacks: 1, bs: 6, normalDmg: 1, critDmg: 1 }, { wounds: 20, save: 2, coverSaves: 0 }))
+    const r = calcResult(sit({ attacks: 1, bs: 6, normalDmg: 1, critDmg: 1 }, { wounds: 20, save: 2 }, { coverSaves: 0 }))
     expect(r.killChance).toBeLessThan(0.01)
   })
 
   it('devastating still applies even when all hits saved or covered', () => {
     // With cover blocking all, devastating should still add MW per crit before cover
-    const r = calcResult(sit({ devastating: 2 }, { coverSaves: 10 }))
+    const r = calcResult(sit({ devastating: 2 }, {}, { coverSaves: 10 }))
     // Even with huge cover, devastating from crits before cover should produce some damage
     expect(r.avgDamage).toBeGreaterThan(0)
   })
@@ -329,8 +328,8 @@ describe('combinedKillChance', () => {
   it('matches golden values', () => {
     const s1 = sit()
     const s2 = sit({ lethal: true })
-    expect(combinedKillChance(s1, s2, 12)).toBeCloseTo(0.015141523497, 9)
-    expect(combinedKillChance(s1, s1, 12)).toBeCloseTo(0.014469451401, 9)
+    expect(combinedKillChance(s1, s2, 12)).toBeCloseTo(0.087745719355, 9)
+    expect(combinedKillChance(s1, s1, 12)).toBeCloseTo(0.081693957596, 9)
   })
 
   it('is in [0,1] and >= each single kill chance', () => {

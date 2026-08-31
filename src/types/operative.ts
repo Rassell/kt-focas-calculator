@@ -22,6 +22,7 @@ export interface Operative {
   ranged: Weapon[]
   melee: Weapon[]
   defender: Defender
+  // coverSaves/obscured are situational checks on Situation, not operative properties
 }
 
 export interface FactionGroup {

@@ -65,8 +65,8 @@ Deployed as a project site at `https://Rassell.github.io/kt-focas-calculator/`.
 `src/engine/calculator.ts` — exact enumeration (no Monte Carlo):
 
 - `dieProbs` / `effectiveDieProbs` (Ceaseless = reroll 1s)
-- `attackerDistribution` — enumerates (crits, normals, fails) with Balanced/Relentless rerolls, then `applyAbilities` (Accurate, Punishing, Severe, Rending) and Obscured
-- `calcDmgProbs` — cover saves, defender saves (binomial), Devastating, JaS, multi-round convolution
+- `attackerDistribution` — enumerates (crits, normals, fails) with Balanced/Relentless rerolls, then `applyAbilities` (Accurate, Punishing, Severe, Rending)
+- `calcDmgProbs` — situational checks (cover saves, obscured), defender saves (binomial), Devastating, JaS, multi-round convolution
 - Exports: `calcDmgProbs`, `calcResult`, `combinedKillChance`, `defaultAttacker`, `defaultDefender`
 
 ## Agents
