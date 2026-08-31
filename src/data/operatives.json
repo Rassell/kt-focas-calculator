@@ -80,11 +80,71 @@
         "defender": {
           "save": 3,
           "wounds": 15,
-          "coverSaves": 0,
-          "indomitus": false,
-          "obscured": false,
           "jasCrits": false,
           "jasNormals": true
+        }
+      },
+      {
+        "id": "assault-intercessor-warrior",
+        "name": "Assault Intercessor Warrior",
+        "ranged": [
+          {
+            "id": "heavy-bolt-pistol",
+            "name": "Heavy bolt pistol",
+            "profiles": [
+              {
+                "id": "standard",
+                "name": "Standard",
+                "attacks": 4,
+                "bs": 3,
+                "normalDmg": 3,
+                "critDmg": 4,
+                "devastating": 0,
+                "piercing": 0,
+                "piercingCrits": 1,
+                "reroll": "none",
+                "lethal": false,
+                "accurate": 0,
+                "rending": false,
+                "severe": false,
+                "punishing": false,
+                "rounds": 1
+              }
+            ]
+          }
+        ],
+        "melee": [
+          {
+            "id": "chainsword",
+            "name": "Chainsword",
+            "profiles": [
+              {
+                "id": "standard",
+                "name": "Standard",
+                "attacks": 5,
+                "bs": 3,
+                "normalDmg": 4,
+                "critDmg": 5,
+                "devastating": 0,
+                "piercing": 0,
+                "piercingCrits": 0,
+                "reroll": "none",
+                "lethal": false,
+                "accurate": 0,
+                "rending": false,
+                "severe": false,
+                "punishing": false,
+                "rounds": 1,
+                "brutal": false
+              }
+            ]
+          }
+        ],
+        "defender": {
+          "save": 3,
+          "wounds": 14,
+          "jasCrits": false,
+          "jasNormals": false
         }
       }
     ]
