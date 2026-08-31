@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import Fight from './pages/Fight'
 import Shooting from './pages/Shooting'
+import Wizard from './pages/Wizard'
 import './App.css'
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
           <nav className="nav">
             <NavLink to="/fight" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Fight</NavLink>
             <NavLink to="/shooting" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Shooting</NavLink>
+            <NavLink to="/wizard" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Wizard</NavLink>
             <span className="nav-sep" aria-hidden>·</span>
             <button className="help-btn" onClick={() => setShowHelp(v => !v)}>{showHelp ? 'Hide Help' : 'Help'}</button>
           </nav>
@@ -46,6 +48,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/fight" replace />} />
           <Route path="/fight" element={<Fight />} />
           <Route path="/shooting" element={<Shooting />} />
+          <Route path="/wizard" element={<Wizard />} />
           <Route path="*" element={<Navigate to="/fight" replace />} />
         </Routes>
       </main>
