@@ -1,78 +1,64 @@
-# React + TypeScript + Vite
+# KT FOCAS Calculator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Kill Team 2026 shooting odds calculator — work out the odds of a ranged attack. Inspired by [ktcalc.com](https://ktcalc.com) (open source [jfreal/ktcalc](https://github.com/jfreal/ktcalc)).
 
-Currently, two official plugins are available:
+Two side-by-side Situations, exact-enumeration probability engine, winner banner.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Attacker**: Attacks, BS (2+–6+), Normal/Crit Dmg, Devastating (MW per crit), Piercing / Piercing Crits, Reroll (None / Balanced / Relentless / Ceaseless / Balanced+Ceaseless), Lethal 5+, Accurate, Rending, Severe, Punishing, Rounds
+- **Defender**: Save (2+–6+), Wounds, Cover Saves, Indomitus (ignore AP), Obscured (crits→normals), Just a Scratch (Crits / Normals)
+- **Results per Situation**: Average Damage, Injury Chance, Kill Chance, damage histogram
+- **Banner**: `Situation 1 does more dmg, enjoy` / `Situation 2 does more dmg, enjoy` (or equal) — based on average damage
+- **Advanced** toggle (⚙️) for Devastating, Piercing Crits, Accurate, Rounds
+- Copy From Situation 1, Help panel
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Tech Stack
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
+Vite 8 + React 19 + TypeScript 6 + React Compiler (Babel). No extra runtime dependencies.
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev      # dev server with HMR
+npm run build    # tsc -b && vite build
+npm run preview  # preview production build
+npm run lint     # eslint .
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project Structure
 
 ```
+src/
+  App.tsx              # UI: SituationPanel, controls, banner
+  App.css              # Layout, panels, banner
+  index.css            # Design tokens
+  main.tsx             # Entry
+  engine/
+    calculator.ts      # Probability engine (multinomial + binomial enumeration)
+public/
+  favicon.svg, icons.svg
+```
+
+## Engine
+
+`src/engine/calculator.ts` — exact enumeration (no Monte Carlo):
+
+- `dieProbs` / `effectiveDieProbs` (Ceaseless = reroll 1s)
+- `attackerDistribution` — enumerates (crits, normals, fails) with Balanced/Relentless rerolls, then `applyAbilities` (Accurate, Punishing, Severe, Rending) and Obscured
+- `calcDmgProbs` — cover saves, defender saves (binomial), Devastating, JaS, multi-round convolution
+- Exports: `calcDmgProbs`, `calcResult`, `combinedKillChance`, `defaultAttacker`, `defaultDefender`
+
+## Agents
+
+See [AGENTS.md](./AGENTS.md) for AI agent instructions, conventions, and verification steps.
+
+## Credits
+
+- Inspired by [ktcalc.com](https://ktcalc.com) by jfreal — [GitHub](https://github.com/jfreal/ktcalc), fork of [KT21Calculator](https://github.com/jmegner/KT21Calculator)
+- [Lite Rules PDF](https://assets.warhammer-community.com/killteam_keydownloads_literules_eng-jfhe9v0j7c-n0x6ozmgo9.pdf)
+
+## License
+
+MIT (or as per original ktcalc).
