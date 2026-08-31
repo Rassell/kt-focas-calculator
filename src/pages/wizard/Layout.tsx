@@ -17,33 +17,35 @@ export default function WizardLayout() {
   ] as const
 
   return (
-    <div className="wizard">
-      <div className="page-intro">
-        <h2>Wizard</h2>
-        <p>Step through a guided calculation — pick shoot or fight, then choose your operative and target.</p>
+    <div className="flex flex-col gap-4">
+      <div className="mb-3.5">
+        <h2 className="m-0 mb-1 text-[18px] text-[#0f172a] font-semibold">Wizard</h2>
+        <p className="m-0 text-[13px] text-[#64748b]">Step through a guided calculation — pick shoot or fight, then choose your operative and target.</p>
       </div>
 
-      <nav className="wizard-progress" aria-label="Wizard steps">
+      <nav className="flex gap-2 items-center justify-center flex-wrap" aria-label="Wizard steps">
         {steps.map((s, idx) =>
           s.enabled ? (
             <NavLink
               key={s.label}
               to={s.to}
-              className={({ isActive }) => `wizard-step-dot clickable ${isActive ? 'active' : ''}`}
+              className={({ isActive }) =>
+                `flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-medium transition-colors cursor-pointer ${isActive ? 'bg-[#0f1117] text-white border-[#0f1117]' : 'bg-white text-[#64748b] border-[#e2e6f0] hover:border-[#6366f1] hover:bg-[#f8f9ff]'}`
+              }
             >
-              <span className="wizard-step-num">{idx + 1}</span>
-              <span className="wizard-step-label">{s.label}</span>
+              <span className={`w-5 h-5 rounded-full grid place-items-center font-bold text-[11px] ${'bg-[#6366f1] text-white'}`}>{idx + 1}</span>
+              <span className="font-semibold">{s.label}</span>
             </NavLink>
           ) : (
-            <span key={s.label} className="wizard-step-dot disabled" aria-disabled="true">
-              <span className="wizard-step-num">{idx + 1}</span>
-              <span className="wizard-step-label">{s.label}</span>
+            <span key={s.label} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-[#e2e6f0] bg-white text-[#64748b] text-xs opacity-45 cursor-not-allowed" aria-disabled="true">
+              <span className="w-5 h-5 rounded-full grid place-items-center bg-[#f1f5f9] text-[#334155] font-bold text-[11px]">{idx + 1}</span>
+              <span className="font-semibold">{s.label}</span>
             </span>
           )
         )}
       </nav>
 
-      <div className="wizard-panel">
+      <div className="bg-white border border-[#e2e6f0] rounded-xl overflow-hidden">
         <Outlet />
       </div>
     </div>
