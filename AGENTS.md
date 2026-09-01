@@ -8,27 +8,35 @@ KT FOCAS Calculator is a Kill Team 2026 odds calculator — single guided Wizard
 
 ## Tech Stack
 
-- Vite 8 + React 19 + TypeScript 6 + React Compiler (Babel) + React Router 7 (`/wizard` only)
-- No other extra runtime deps (no recharts). Pure React + CSS.
+- Vite 8 + React 19 + TypeScript 6 + React Compiler (Babel) + React Router 7 (`/wizard` only) + Tailwind CSS 4
+- No other extra runtime deps (no recharts). Pure React + Tailwind.
 - ESLint flat config (`eslint.config.js`), `tsc -b` for type checking.
 - GitHub Pages project site: `vite.config.ts` `base: '/kt-focas-calculator/'`, `BrowserRouter basename={import.meta.env.BASE_URL}`.
+- PWA: `public/manifest.webmanifest` + `public/sw.js` + icons (`icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, `apple-touch-icon.png`); `index.html` links manifest/apple-touch-icon/theme-color; `src/main.tsx` registers SW in prod only; `src/components/InstallBanner.tsx` (mobile-only banner).
 
 ## Project Structure
 
 ```
 src/
-  App.tsx                 # Shell: topbar, help, Routes (/wizard), footer
-  App.css                 # Layout, wizard, histogram, responsive grid
-  index.css               # Design tokens (light/dark), base typography
-  main.tsx                # StrictMode + createRoot + BrowserRouter basename=BASE_URL
-  pages/
-    Wizard.tsx            # 4-step wizard: mode → attacker → defender → stats (calcResult)
+  App.tsx                 # Shell: topbar, help, Routes (/wizard), footer + InstallBanner
+  index.css               # Design tokens (light/dark), base typography (Tailwind)
+  main.tsx                # StrictMode + createRoot + BrowserRouter basename=BASE_URL + SW register (prod)
+  components/
+    InstallBanner.tsx     # Mobile install banner (beforeinstallprompt + iOS fallback, 7-day snooze)
+    layout/               # AppHeader, AppFooter
+    stats/ + wizard/ + ui/# Stats, wizard steps, shared UI
+  pages/wizard/           # ModeStep, AttackerStep, DefenderStep, StatsStep, Layout, shared
   data/
     operatives.json       # Predefined operatives: { shoot, fight, defender } per entry
+    operatives.ts         # Types/helpers
   engine/
     calculator.ts         # Probability engine (see below)
+  hooks/ + types/         # useWizardParams, useFilteredOperatives, operative types
 public/
   favicon.svg
+  manifest.webmanifest    # PWA manifest (standalone, icons, theme_color)
+  sw.js                   # Service worker (network-first navigations, cache-first assets)
+  icon-192.png / icon-512.png / icon-512-maskable.png / apple-touch-icon.png
 .github/workflows/deploy.yml  # Pages deploy (build → 404.html SPA fallback → deploy-pages)
 index.html, vite.config.ts, tsconfig.*.json
 ```
@@ -51,6 +59,7 @@ npm run preview  # vite preview (after build)
 - `src/main.tsx` `BrowserRouter basename={import.meta.env.BASE_URL}` — route `/wizard` works under subpath; dev stays at `/`.
 - `.github/workflows/deploy.yml` — on `push` to `main` + `workflow_dispatch`: `npm ci` → `npm run build` → `cp dist/index.html dist/404.html` (SPA fallback for deep links) → `configure-pages` → `upload-pages-artifact` → `deploy-pages`. Requires Settings → Pages → Source: `GitHub Actions`.
 - When adding routes, keep SPA fallback (`404.html`) and `basename` in mind; test `npm run build && npm run preview` and check `dist/index.html` asset paths include `/kt-focas-calculator/`.
+- PWA assets in `public/` (`manifest.webmanifest`, `sw.js`, `icon-*.png`, `apple-touch-icon.png`) are copied to `dist/` by Vite; verify `dist/manifest.webmanifest` and `dist/sw.js` exist and `dist/index.html` links manifest/theme-color/apple-touch-icon.
 
 ## Engine — `src/engine/calculator.ts`
 
@@ -64,16 +73,17 @@ npm run preview  # vite preview (after build)
 
 When editing the engine: keep exact enumeration (no Monte Carlo), ensure `dmgProbs` sums to 1, run `npm run build` to catch TS errors.
 
-## UI — `src/App.tsx` + `src/pages/Wizard.tsx`
+## UI — `src/App.tsx` + `src/pages/wizard/`
 
-- `Wizard.tsx` — 4-step flow: mode (shoot/fight) → attacker (searchable grid from `operatives.json`, `shoot`/`fight` profile per mode) → defender (same JSON, `defender` profile) → stats (`calcResult` → avg/injury/kill + histogram + exact probs). State: `step`, `mode`, `attackerId`, `defenderId`, search queries. Mappers `toAttacker`/`toDefender`.
-- `App` — shell: topbar, help, `Routes` (`/`→`/wizard`, `/wizard`, `*`→`/wizard`), footer. No other pages.
-- Routing via `react-router-dom` `BrowserRouter` with `basename={import.meta.env.BASE_URL}` (see `main.tsx`).
+- `pages/wizard/` — 4-step flow: `ModeStep` → `AttackerStep` → `DefenderStep` → `StatsStep` (via `WizardLayout` + `shared.tsx` + `useWizardParams`). Attacker/defender pick from `operatives.json` (`shoot`/`fight`/`defender` profiles per mode); stats uses `calcResult` → avg/injury/kill + histogram + exact probs. Components in `src/components/wizard/` and `src/components/stats/`.
+- `App` — shell: topbar, help, `Routes` (`/`→`/wizard`, `/wizard`, `*`→`/wizard`), footer, `InstallBanner` (mobile-only). No other pages.
+- `InstallBanner` (`src/components/InstallBanner.tsx`) — fixed bottom, `md:hidden`, safe-area inset; listens for `beforeinstallprompt` (Android/Chrome) with Install button (`prompt()` + `userChoice`), iOS fallback (Share → Add to Home Screen hint after 1.2s), hidden when `display-mode: standalone` or `navigator.standalone`, 7-day snooze via `localStorage` (`pwa-install-banner-dismissed`), handles `appinstalled`.
+- Routing via `react-router-dom` `BrowserRouter` with `basename={import.meta.env.BASE_URL}` (see `main.tsx`); SW registered in `main.tsx` on `load` when `import.meta.env.PROD`.
 
-## Styling — `src/App.css`
+## Styling — `src/index.css` (Tailwind)
 
 - Dark topbar (`#0f1117`), wizard progress dots, mode cards, operative grid, summary vs layout, histogram bars (`#6366f1`).
-- Keep `index.css` tokens for light/dark. Prefer CSS over new deps.
+- Keep `index.css` tokens for light/dark. Tailwind via `@tailwindcss/vite`. Prefer Tailwind/CSS over new deps.
 
 ## Conventions
 
@@ -87,10 +97,12 @@ When editing the engine: keep exact enumeration (no Monte Carlo), ensure `dmgPro
 - New operative: add entry to `src/data/operatives.json` with `shoot`/`fight`/`defender` fields matching `Attacker`/`Defender` types.
 - New attacker/defender rule: extend type in `calculator.ts`, handle in `attackerDistribution` or `calcDmgProbs`, expose in wizard summary if needed.
 - New view: add component in `App.tsx` or `pages/`, style in `App.css`, memoize calculations.
-- Tests: add `vitest` if needed (not currently installed).
+- Tests: `vitest` + `jsdom` + `@testing-library/react` (see `vite.config.ts` `test`); run `npm test` / `npm run test:coverage`.
+- PWA: icons generated from `src/assets/foca.png` via `sips --padToHeightWidth` → `sips -z` (512/192/180); manifest `start_url`/`scope` must match `base`; SW cache `kt-focas-v1` (network-first navigations, cache-first assets).
 
 ## Verification
 
-1. `npm run build` passes (tsc + vite)
+1. `npm run build` passes (tsc + vite) — check `dist/manifest.webmanifest`, `dist/sw.js`, `dist/icon-*.png` exist
 2. `npm run lint` passes
-3. Manual: wizard flow mode → attacker → defender → stats shows correct avg/injury/kill + histogram
+3. `npm test` passes (116 tests)
+4. Manual: wizard flow mode → attacker → defender → stats shows correct avg/injury/kill + histogram; on mobile, install banner appears (dismiss snoozes 7 days, hidden when installed)

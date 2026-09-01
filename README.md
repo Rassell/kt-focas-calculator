@@ -15,11 +15,12 @@ Exact-enumeration probability engine, operative presets from JSON.
   4. **Statistics** — Average Damage, Injury Chance, Kill Chance, damage histogram + exact probabilities (via `calcResult`)
 - **Operatives JSON** — each entry has `shoot`/`fight` `Attacker` profiles and a `defender` `Defender` profile; searchable by name/faction/role
 - **Engine** — same exact-enumeration engine as before (multinomial + binomial, no Monte Carlo)
+- **PWA / Install** — installable on mobile (standalone); `manifest.webmanifest` + `sw.js` + icons (`icon-192.png`, `icon-512.png`, `apple-touch-icon.png`); mobile-only install banner (`src/components/InstallBanner.tsx`) with `beforeinstallprompt` on Android/Chrome and Share → Add to Home Screen hint on iOS, 7-day snooze, hidden when already installed
 - Help panel
 
 ## Tech Stack
 
-Vite 8 + React 19 + TypeScript 6 + React Compiler (Babel) + React Router 7. No other runtime deps.
+Vite 8 + React 19 + TypeScript 6 + React Compiler (Babel) + React Router 7 + Tailwind CSS 4. No other runtime deps. PWA via `manifest.webmanifest` + `sw.js` (no extra deps).
 
 ## Getting Started
 
@@ -35,18 +36,28 @@ npm run lint     # eslint .
 
 ```
 src/
-  App.tsx              # Shell: topbar, help, footer + Routes (wizard only)
-  App.css              # Layout, wizard, histogram
-  index.css            # Design tokens
-  main.tsx             # Entry: BrowserRouter with basename=BASE_URL
-  pages/
-    Wizard.tsx         # 4-step wizard (mode → attacker → defender → stats)
+  App.tsx              # Shell: topbar, help, footer + Routes + InstallBanner
+  index.css            # Design tokens (Tailwind)
+  main.tsx             # Entry: BrowserRouter basename=BASE_URL + SW registration (prod only)
+  components/
+    InstallBanner.tsx  # Mobile install banner (beforeinstallprompt + iOS fallback)
+    layout/            # AppHeader, AppFooter
+    stats/             # StatsOverview, DamageHistogram, summary cards
+    wizard/            # ModeCard, OperativeCard/Grid, WizardSteps, etc.
+    ui/                # Pill, etc.
+  pages/wizard/        # ModeStep, AttackerStep, DefenderStep, StatsStep, Layout
   data/
     operatives.json    # Predefined operatives (shoot/fight/defender presets)
+    operatives.ts      # Types + helpers
   engine/
     calculator.ts      # Probability engine (multinomial + binomial enumeration)
+  hooks/               # useWizardParams, useFilteredOperatives
+  types/               # operative.ts
 public/
   favicon.svg
+  manifest.webmanifest # PWA manifest (standalone, icons)
+  sw.js                # Service worker (network-first navigations, cache-first assets)
+  icon-192.png / icon-512.png / icon-512-maskable.png / apple-touch-icon.png
 .github/workflows/deploy.yml  # GitHub Pages deploy
 ```
 
@@ -57,6 +68,7 @@ Deployed as a project site at `https://Rassell.github.io/kt-focas-calculator/`.
 - `vite.config.ts` sets `base: '/kt-focas-calculator/'` — required for project sites (`https://<user>.github.io/<repo>/`). For a user/org site (`<user>.github.io`) use `'/'`.
 - `src/main.tsx` uses `<BrowserRouter basename={import.meta.env.BASE_URL}>` so `/wizard` works under the subpath; dev stays at `/`.
 - `.github/workflows/deploy.yml` builds on `push` to `main` (and manual dispatch), copies `dist/index.html` → `dist/404.html` for SPA fallback (direct deep links), then deploys via `actions/deploy-pages`.
+- PWA assets (`public/manifest.webmanifest`, `public/sw.js`, `public/icon-*.png`, `public/apple-touch-icon.png`) are copied to `dist/` by Vite; `index.html` links `manifest` + `apple-touch-icon` + `theme-color`; `src/main.tsx` registers `sw.js` in production only.
 
 **One-time setup:** Repo → Settings → Pages → Source: `GitHub Actions`.
 
