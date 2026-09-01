@@ -46,7 +46,17 @@ export function useWizardParams() {
 
   function updateParams(patch: Record<string, string | null>) {
     const next = new URLSearchParams(searchParams)
-    // Cascading clears: changing attacker clears weapon/profile; changing weapon clears profile
+    // Cascading clears: changing mode resets selections; changing attacker clears weapon/profile; changing weapon clears profile
+    if ('mode' in patch) {
+      const v = patch.mode
+      const changing = v !== mode
+      if (changing) {
+        if (!('attacker' in patch)) next.delete('attacker')
+        if (!('weapon' in patch)) next.delete('weapon')
+        if (!('profile' in patch)) next.delete('profile')
+        if (!('defender' in patch)) next.delete('defender')
+      }
+    }
     if ('attacker' in patch) {
       const v = patch.attacker
       const changing = v !== attackerId
@@ -69,6 +79,12 @@ export function useWizardParams() {
 
   function buildSearch(patch: Record<string, string | null>): string {
     const next = new URLSearchParams(searchParams)
+    if ('mode' in patch && patch.mode !== mode) {
+      if (!('attacker' in patch)) next.delete('attacker')
+      if (!('weapon' in patch)) next.delete('weapon')
+      if (!('profile' in patch)) next.delete('profile')
+      if (!('defender' in patch)) next.delete('defender')
+    }
     if ('attacker' in patch && patch.attacker !== attackerId) {
       if (!('weapon' in patch)) next.delete('weapon')
       if (!('profile' in patch)) next.delete('profile')
