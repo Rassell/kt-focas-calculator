@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { InstallBanner } from './components/InstallBanner'
 import { AppFooter } from './components/layout/AppFooter'
 import { AppHeader } from './components/layout/AppHeader'
 import WizardLayout from './pages/wizard/Layout'
@@ -27,6 +28,7 @@ export default function App() {
       </main>
 
       <AppFooter />
+      <InstallBanner />
     </div>
   )
 }
